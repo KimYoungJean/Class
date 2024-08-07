@@ -54,8 +54,8 @@ public class DatabaseManager : MonoBehaviour
     {
         string pwhash = "";
         #region Dispose사용
-        /*
-        
+
+
         SHA256 sha256 = SHA256.Create(); // 빌더 패턴: 객체 생성과 메소드 호출을 한 줄로 처리
         byte[] hashArray = sha256.ComputeHash(Encoding.UTF8.GetBytes(password)); // 비밀번호를 해싱
         foreach (byte b in hashArray)
@@ -65,20 +65,20 @@ public class DatabaseManager : MonoBehaviour
         }
         print(pwhash);
         // 해시는 사용이 끝나면 반드시 해제해야 함. 왜냐하면 , GC가 해시를 해제하지 않기 때문        
-        sha256.Dispose();
-        */
+
+
         #endregion
         #region 디스포즈 사용안함
-        using (SHA256 sha256 = SHA256.Create())
-        {
-            byte[] hashArray = sha256.ComputeHash(Encoding.UTF8.GetBytes(password)); // 비밀번호를 해싱
-            foreach (byte b in hashArray)
-            {
-                //pwhash += $"{b:x2}";// 16진수로 변환
-                pwhash += b.ToString("x2"); // 16진수로 변환
-            }
-            print(pwhash);
-        }
+        /*   using (SHA256 sha256 = SHA256.Create())
+           {
+               byte[] hashArray = sha256.ComputeHash(Encoding.UTF8.GetBytes(password)); // 비밀번호를 해싱
+               foreach (byte b in hashArray)
+               {
+                   //pwhash += $"{b:x2}";// 16진수로 변환
+                   pwhash += b.ToString("x2"); // 16진수로 변환
+               }
+               print(pwhash);
+           }*/
         #endregion
 
         MySqlCommand cmd = new MySqlCommand(); // 쿼리를 날리기 위한 객체
@@ -86,7 +86,7 @@ public class DatabaseManager : MonoBehaviour
         cmd.Connection = connection; // 쿼리를 날릴 커넥션을 설정
 
         cmd.CommandText =
-            $"SELECT * FROM {tableName} WHERE email = '{email}' AND pw = '{password}'"; // 쿼리 내용
+            $"SELECT * FROM {tableName} WHERE email = '{email}' AND pwhash = '{pwhash}'"; // 쿼리 내용
 
         MySqlDataAdapter dataAdapter = new MySqlDataAdapter(cmd); // 쿼리를 날리기 위한 어댑터
 
@@ -102,9 +102,10 @@ public class DatabaseManager : MonoBehaviour
             print(row["level"].ToString()); // 대소문자 구분할 필요 없음.
             UserData data = new UserData(row); // 받아온 정보를 UserData 객체로 변환
 
-            print(data.email);
+            //print(data.email);
 
             successCallback?.Invoke(data); // 로그인 성공 
+            sha256.Dispose();
         }
         else
         {
@@ -140,10 +141,24 @@ public class DatabaseManager : MonoBehaviour
         int classValue = (int)Enum.Parse(typeof(CharacterClass), characterClass);
         int levelValue = int.Parse(level);
 
+        string pwhash = "";
+
+
+
+        SHA256 sha256 = SHA256.Create(); // 빌더 패턴: 객체 생성과 메소드 호출을 한 줄로 처리
+        byte[] hashArray = sha256.ComputeHash(Encoding.UTF8.GetBytes(password)); // 비밀번호를 해싱
+        foreach (byte b in hashArray)
+        {
+            //pwhash += $"{b:x2}";// 16진수로 변환
+            pwhash += b.ToString("x2"); // 16진수로 변환
+        }
+        print(pwhash);
+        // 해시는 사용이 끝나면 반드시 해제해야 함. 왜냐하면 , GC가 해시를 해제하지 않기 때문        
+
         MySqlCommand cmd = new MySqlCommand();
         cmd.Connection = connection;
         cmd.CommandText =
-            $"INSERT INTO {tableName} (email, pw, name, class, level, profile_text) VALUES ('{email}', '{password}', '{name}', {classValue}, {levelValue}, '{profileText}')";
+            $"INSERT INTO {tableName} (email, pw, name, class, level, profile_text,pwHash) VALUES ('{email}', '{password}', '{name}', {classValue}, {levelValue}, '{profileText}','{pwhash}')";
 
         int queryCount = cmd.ExecuteNonQuery();
 
@@ -151,41 +166,69 @@ public class DatabaseManager : MonoBehaviour
         {
 
             successCallback?.Invoke();
+            sha256.Dispose();
         }
         else
         {
             // 쿼리 수행 실패
         }
     }
-    public void Edit(int uid ,string dropdown,string edit, Action successCallback)
+    public void Edit(int uid, string cuurentInfo, string category, string edit, Action successCallback)
     {
+        
         MySqlCommand cmd = new MySqlCommand();
         cmd.Connection = connection;
-        if(dropdown == "class")
+        if (category == "Class")
         {
-            int _edit = (int)Enum.Parse(typeof(CharacterClass), edit);
-            
-
+            int _edit = (int)Enum.Parse(typeof(CharacterClass), edit);//문자열을 enum으로 변환      
             cmd.CommandText =
-                $"UPDATE {tableName} SET {dropdown} = '{_edit}' WHERE uid = '{uid}'";
+                $"UPDATE {tableName} SET {category} = '{_edit}' WHERE uid = '{uid}'";
         }
-        else if(dropdown == "level")
+        else if (category == "Level")
         {
             int _edit = int.Parse(edit);
-            
+
 
             cmd.CommandText =
-            $"UPDATE {tableName} SET {dropdown} = '{_edit}' WHERE uid = ' {uid}'";
+            $"UPDATE {tableName} SET {category} = '{_edit}' WHERE uid = ' {uid}'";
+        }
+        else if (category == "Password")
+        {
+            print("비밀번호 변경");
+            
+            string pwhash = "";
+            SHA256 sha256 = SHA256.Create(); // 빌더 패턴: 객체 생성과 메소드 호출을 한 줄로 처리
+            byte[] hashArray = sha256.ComputeHash(Encoding.UTF8.GetBytes(edit)); // 비밀번호를 해싱
+            foreach (byte b in hashArray)
+            {
+                //pwhash += $"{b:x2}";// 16진수로 변환
+                pwhash += b.ToString("x2"); // 16진수로 변환
+            }
+            cmd.CommandText =
+                $"UPDATE {tableName} " +
+                $"SET pwHash = '{pwhash}',pw ='{edit}' " +
+                $"WHERE uid = '{uid}'";
+               
+            
+
+            
+            print("비밀번호 변경2");
+            sha256.Dispose();
         }
         else
         {
             cmd.CommandText =
-                $"UPDATE {tableName} SET {dropdown} = '{edit}' WHERE uid = ' {uid}'";
+                $"UPDATE {tableName} SET {category} = '{edit}' WHERE uid = ' {uid}'";
         }
 
-        int queryCount = cmd.ExecuteNonQuery();
-        if (queryCount > 0) {
+        
+        
+        int queryCount = cmd.ExecuteNonQuery();  
+
+        if (queryCount > 0)
+        {
             successCallback?.Invoke();
+            
         }
         else
         {
@@ -209,6 +252,33 @@ public class DatabaseManager : MonoBehaviour
         {
             // 쿼리 수행 실패
         }
+    }
+
+    public void Find(string email, Action<UserData> successCallback)
+    {
+        MySqlCommand cmd = new MySqlCommand();
+        cmd.Connection = connection;
+        cmd.CommandText =
+            $"SELECT * FROM {tableName} WHERE email = '{email}'";
+
+        MySqlDataAdapter dataAdapter = new MySqlDataAdapter(cmd);
+        DataSet dataset = new DataSet();
+        dataAdapter.Fill(dataset);
+
+        bool isFindSuccess = (dataset.Tables.Count > 0 && dataset.Tables[0].Rows.Count > 0);
+
+        if (isFindSuccess)
+        {
+            
+            DataRow row = dataset.Tables[0].Rows[0];
+            UserData data = new UserData(row);
+            successCallback?.Invoke(data);
+        }
+        else
+        {
+            // 쿼리 수행 실패
+        }
+
     }
 
 }

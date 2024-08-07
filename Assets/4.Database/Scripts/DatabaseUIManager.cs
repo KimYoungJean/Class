@@ -38,6 +38,8 @@ public class DatabaseUIManager : MonoBehaviour
     public Button editButton;
     public Button deleteButton;
 
+    public Button findButton;
+
     [Header("Texts")]
     public Text infoText;
     public Text leveltext;
@@ -45,6 +47,7 @@ public class DatabaseUIManager : MonoBehaviour
     public Text dropdownCategory;
     public Text classText;
     public Text currentInfo;
+    public Text pwText;
 
     private UserData userData;
 
@@ -61,6 +64,7 @@ public class DatabaseUIManager : MonoBehaviour
         editPageButton.onClick.AddListener(EditPage);
         editButton.onClick.AddListener(EditButton);
         deleteButton.onClick.AddListener(DeleteButton);
+        findButton.onClick.AddListener(FindButton);
 
 
 
@@ -180,6 +184,9 @@ public class DatabaseUIManager : MonoBehaviour
             case "Email":
                 currentInfo.text = userData.email;
                 break;
+            case "Password":
+                currentInfo.text = userData.password;
+                break;
             case "Name":
                 currentInfo.text = userData.name;
                 break;
@@ -197,7 +204,7 @@ public class DatabaseUIManager : MonoBehaviour
 
     public void EditButton()
     {
-        DatabaseManager.instance.Edit(userData.Uid,dropdownCategory.text,EditedInput.text,onEditSuccess);
+        DatabaseManager.instance.Edit(userData.Uid,currentInfo.text,dropdownCategory.text,EditedInput.text,onEditSuccess);
     }
     public void onEditSuccess()
     {
@@ -219,6 +226,23 @@ public class DatabaseUIManager : MonoBehaviour
         signUpPanel.SetActive(false);
         loginPanel.SetActive(true);
         editPanel.SetActive(false);
+    }
+
+    public void FindButton()
+    {
+        DatabaseManager.instance.Find(emailInput.text, onFindSuccess);
+    }
+    public void onFindSuccess(UserData data)
+    {        
+       userData = data;
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"이메일: {userData.email}");
+        sb.AppendLine($"비밀번호: {userData.password}");
+        
+
+        pwText.text = sb.ToString();        
+
     }
 }
 
