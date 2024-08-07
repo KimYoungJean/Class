@@ -10,31 +10,45 @@ using UnityEngine.UI;
 
 public class DatabaseUIManager : MonoBehaviour
 {
+    [Header("Panels")]
     public GameObject loginPanel;
     public GameObject infoPanel;
     public GameObject signUpPanel;
+    public GameObject editPanel;
 
-
+    [Header("UI Elements")]
+    [Header("Input Fields")]
     public InputField emailInput;
     public InputField passwordInput;
-
-    public Button loginButton;
-    public Button signUpPageButton;
-    public Button cancelButton;
-    public Button levelUpButton;
-    public Button signUpButton;
-
-    public Text infoText;
-    public Text leveltext;
-
-    private UserData userData;
-
     public InputField emailText;
     public InputField passwordText;
     public InputField nameText;
-    public Text classText;
     public InputField levelText;
     public InputField profileText;
+    public InputField EditedInput;
+
+    [Header("Buttons")]
+    public Button loginButton;
+    public Button signUpPageButton;
+    public Button editPageButton;
+
+    public Button cancelButton;
+    public Button levelUpButton;
+    public Button signUpButton;
+    public Button editButton;
+    public Button deleteButton;
+
+    [Header("Texts")]
+    public Text infoText;
+    public Text leveltext;
+    public Text currentInfoLabel;
+    public Text dropdownCategory;
+    public Text classText;
+    public Text currentInfo;
+
+    private UserData userData;
+
+
 
 
     private void Awake()
@@ -44,6 +58,10 @@ public class DatabaseUIManager : MonoBehaviour
         signUpPageButton.onClick.AddListener(SignUpPage);
         cancelButton.onClick.AddListener(CancelButton);
         signUpButton.onClick.AddListener(SignUpButtonClick);
+        editPageButton.onClick.AddListener(EditPage);
+        editButton.onClick.AddListener(EditButton);
+        deleteButton.onClick.AddListener(DeleteButton);
+
 
 
     }
@@ -78,7 +96,10 @@ public class DatabaseUIManager : MonoBehaviour
         userData = data;
 
         loginPanel.SetActive(false);
+        signUpPanel.SetActive(false);
+        editPanel.SetActive(false);
         infoPanel.SetActive(true);
+
 
         //infoText.text = $"이메일: {userData.email}\n이름: {userData.name}\n클래스: {userData.characterClass}\n레벨: {userData.level}\n프로필: {userData.profileText}";
         StringBuilder sb = new StringBuilder();
@@ -108,25 +129,38 @@ public class DatabaseUIManager : MonoBehaviour
     {
         loginPanel.SetActive(false);
         infoPanel.SetActive(false);
+        editPanel.SetActive(false);
+
         signUpPanel.SetActive(true);
+    }
+    public void EditPage()
+    {
+        infoPanel.SetActive(false);
+        signUpPanel.SetActive(false);
+        loginPanel.SetActive(false);
+
+        editPanel.SetActive(true);
+
     }
     public void CancelButton()
     {
         infoPanel.SetActive(false);
         signUpPanel.SetActive(false);
+        editPanel.SetActive(false);
+
         loginPanel.SetActive(true);
     }
-    
+
     public void SignUpButtonClick()
     {
-       DatabaseManager.instance.SignUp
-            (emailText.text, 
-            passwordText.text, 
-            nameText.text, 
-            classText.text, 
-            levelText.text, 
-            profileText.text, 
-            onSignUpSuccess);
+        DatabaseManager.instance.SignUp
+             (emailText.text,
+             passwordText.text,
+             nameText.text,
+             classText.text,
+             levelText.text,
+             profileText.text,
+             onSignUpSuccess);
     }
     private void onSignUpSuccess()
     {
@@ -134,9 +168,58 @@ public class DatabaseUIManager : MonoBehaviour
         infoPanel.SetActive(false);
         signUpPanel.SetActive(false);
         loginPanel.SetActive(true);
-       // infoText.text = $"이메일: {userData.email}\n이름: {userData.name}\n클래스: {userData.characterClass}\n레벨: {userData.level}\n프로필: {userData.profileText}";
+        // infoText.text = $"이메일: {userData.email}\n이름: {userData.name}\n클래스: {userData.characterClass}\n레벨: {userData.level}\n프로필: {userData.profileText}";
     }
 
+    public void onValueChanged()
+    {
+        currentInfoLabel.text = dropdownCategory.text;
+
+        switch (dropdownCategory.text)
+        {
+            case "Email":
+                currentInfo.text = userData.email;
+                break;
+            case "Name":
+                currentInfo.text = userData.name;
+                break;
+            case "Class":
+                currentInfo.text = userData.characterClass.ToString();
+                break;
+            case "Level":
+                currentInfo.text = userData.level.ToString();
+                break;
+            case "Profile_Text":
+                currentInfo.text = userData.profileText;
+                break;
+        }
+    }
+
+    public void EditButton()
+    {
+        DatabaseManager.instance.Edit(userData.Uid,dropdownCategory.text,EditedInput.text,onEditSuccess);
+    }
+    public void onEditSuccess()
+    {
+        print("수정 성공!");
+        infoPanel.SetActive(false);
+        signUpPanel.SetActive(false);
+        loginPanel.SetActive(true);
+        editPanel.SetActive(false);
+    }
+
+    public void DeleteButton()
+    {
+       DatabaseManager.instance.Delete(userData.Uid, onDeleteSuccess);
+    }
+    public void onDeleteSuccess()
+    {
+        print("삭제 성공!");
+        infoPanel.SetActive(false);
+        signUpPanel.SetActive(false);
+        loginPanel.SetActive(true);
+        editPanel.SetActive(false);
+    }
 }
 
 

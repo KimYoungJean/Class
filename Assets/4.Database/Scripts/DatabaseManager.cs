@@ -7,6 +7,8 @@ using System;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
+using Unity.PlasticSCM.Editor.WebApi;
+using TMPro.EditorUtilities;
 
 public class DatabaseManager : MonoBehaviour
 {
@@ -148,6 +150,59 @@ public class DatabaseManager : MonoBehaviour
         if (queryCount > 0)
         {
 
+            successCallback?.Invoke();
+        }
+        else
+        {
+            // 쿼리 수행 실패
+        }
+    }
+    public void Edit(int uid ,string dropdown,string edit, Action successCallback)
+    {
+        MySqlCommand cmd = new MySqlCommand();
+        cmd.Connection = connection;
+        if(dropdown == "class")
+        {
+            int _edit = (int)Enum.Parse(typeof(CharacterClass), edit);
+            
+
+            cmd.CommandText =
+                $"UPDATE {tableName} SET {dropdown} = '{_edit}' WHERE uid = '{uid}'";
+        }
+        else if(dropdown == "level")
+        {
+            int _edit = int.Parse(edit);
+            
+
+            cmd.CommandText =
+            $"UPDATE {tableName} SET {dropdown} = '{_edit}' WHERE uid = ' {uid}'";
+        }
+        else
+        {
+            cmd.CommandText =
+                $"UPDATE {tableName} SET {dropdown} = '{edit}' WHERE uid = ' {uid}'";
+        }
+
+        int queryCount = cmd.ExecuteNonQuery();
+        if (queryCount > 0) {
+            successCallback?.Invoke();
+        }
+        else
+        {
+            // 쿼리 수행 실패
+        }
+
+    }
+    public void Delete(int uid, Action successCallback)
+    {
+        MySqlCommand cmd = new MySqlCommand();
+        cmd.Connection = connection;
+        cmd.CommandText =
+            $"DELETE FROM {tableName} WHERE uid = '{uid}'";
+
+        int queryCount = cmd.ExecuteNonQuery();
+        if (queryCount > 0)
+        {
             successCallback?.Invoke();
         }
         else
