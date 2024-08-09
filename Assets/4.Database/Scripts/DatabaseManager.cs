@@ -12,7 +12,7 @@ using TMPro.EditorUtilities;
 
 public class DatabaseManager : MonoBehaviour
 {
-    private string serverIP = "127.0.0.1";
+    private string serverIP = "3.36.92.206";
     private string dbName = "game";
     private string tableName = "users";
 
