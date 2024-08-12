@@ -19,7 +19,10 @@ public class HWCoroutine : MonoBehaviour
 
     public void Start()
     {
-        StartCoroutine(GetWallpaper(ImageURL));
+        _= StartCoroutine(GetWallpaper(ImageURL));
+        // _=: 변수를 선언하지 않고 값을 반환받을 수 있다.
+        // 장점 : 변수를 선언하지 않아도 되므로 코드가 간결해진다.
+
         StartCoroutine(SetWallpaper());
 
     }
